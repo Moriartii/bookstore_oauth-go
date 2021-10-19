@@ -106,7 +106,6 @@ func cleanRequest(request *http.Request) {
 
 func getAccessToken(accessTokenId string) (*accessToken, *errors.RestErr) {
 	response := oauthRestClient.Get(fmt.Sprintf("/oauth/access_token/%s", accessTokenId))
-	fmt.Println("***** DATA BY ACCESS_TOKEN FROM CASSANDRA *****", response)
 
 	if response == nil || response.Response == nil {
 		return nil, errors.NewInternalServerError("invalid restclient response when trying to get access token")
@@ -125,7 +124,5 @@ func getAccessToken(accessTokenId string) (*accessToken, *errors.RestErr) {
 	if err := json.Unmarshal(response.Bytes(), &at); err != nil {
 		return nil, errors.NewInternalServerError("error when trying to unmarshal access token response")
 	}
-
-	//fmt.Println("***** DATA BY ACCESS_TOKEN FROM CASSANDRA *****", at)
 	return &at, nil
 }

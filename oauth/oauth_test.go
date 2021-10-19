@@ -2,10 +2,19 @@ package oauth
 
 import (
 	"net/http"
+	"os"
 	"testing"
 
+	"github.com/mercadolibre/golang-restclient/rest"
 	"github.com/stretchr/testify/assert"
 )
+
+func TestMain(m *testing.M) {
+	rest.StartMockupServer()
+
+	os.Exit(m.Run())
+
+}
 
 func TestOauthConstant(t *testing.T) {
 	if headerXPublic != "X-Public" {
@@ -66,4 +75,20 @@ func TestGetCallerIDNoError(t *testing.T) {
 	}
 	request.Header.Add("X-Caller-Id", "123")
 	assert.EqualValues(t, 123, GetCallerID(&request))
+}
+
+func TestGetAccessTokenInvalidRestClientResponse(t *testing.T) {
+	rest.FlushMockups()
+	rest.AddMockups(&rest.Mock{
+		HTTPMethod:   http.MethodGet,
+		URL:          "http://localhost:8080/oauth/access_token/AbC123",
+		ReqBody:      ``,
+		RespHTTPCode: -1,
+		RespBody:     `{}`,
+	})
+	accessToken, err := getAccessToken("AbC123")
+	assert.Nil(t, accessToken)
+	assert.NotNil(t, err)
+	assert.EqualValues(t, http.StatusInternalServerError, err.Status)
+	assert.EqualValues(t, "invalid restclient response when trying to get access token", err.Message)
 }
